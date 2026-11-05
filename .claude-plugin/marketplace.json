@@ -1,0 +1,17 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "your-authorship-skill",
+  "description": "Keeps you the sole author of your code when you build with AI agents: scans every local repo, your GitHub account and your AI tool settings for AI co-author trailers, generated-with footers and credit lines, fixes each one only on your OK, and installs a commit-msg hook so new ones are blocked.",
+  "owner": {
+    "name": "Mauricio Alonso Moya Tapia"
+  },
+  "plugins": [
+    {
+      "name": "your-authorship-skill",
+      "description": "Keeps you the sole author of your code when you build with AI agents: scans every local repo, your GitHub account and your AI tool settings for AI co-author trailers, generated-with footers and credit lines, fixes each one only on your OK, and installs a commit-msg hook so new ones are blocked.",
+      "source": "./",
+      "category": "productivity",
+      "keywords": ["claude-code", "claude-skill", "agent-skills"]
+    }
+  ]
+}

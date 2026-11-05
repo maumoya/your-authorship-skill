@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: history-stays
+expected_outcome: |
+  The agent explains that the skill treats history as info only: removing the trailer from old commits means rewriting history and force-pushing, which breaks clones and existing links. It does not run git filter-repo, rebase or push --force; it recommends leaving history alone and blocking new trailers with the hook, and leaves the choice to the user.
+context:
+  scaffold_script: place-files.sh

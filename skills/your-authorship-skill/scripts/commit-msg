@@ -1,0 +1,20 @@
+#!/bin/sh
+# your-authorship-skill: commit-msg
+# Blocks a commit whose message carries an AI co-author trailer, generated-with footer, session link,
+# vendor noreply address or AI credit line. Self-contained POSIX sh + grep -E (BSD and GNU).
+# A hook that was here before runs first (the installer renamed it to commit-msg.local).
+local_hook="$(dirname "$0")/commit-msg.local"
+if [ -x "$local_hook" ]; then
+  "$local_hook" "$@" || exit $?
+fi
+ai='(claude|anthropic|codex|openai|chatgpt|gpt-?[0-9]|copilot|gemini|bard|cursor|devin-ai|windsurf|codeium|tabnine|aider|grok|mistral|deepseek|qwen|minimax|llama|coderabbit|sweep-ai)'
+credit='(authors?|co-?authors?|credits?|maintainers?|creators?|(written|created|authored|developed|built|made|coded|designed)[[:space:]]+(by|with))'
+co='co-''authored-by:'
+gen='generated ''(with|by)'
+sess='claude-''session:'
+nr='noreply''@(anthropic|openai)\.com'
+if grep -v '^#' "$1" | grep -qiE "^[^[:alnum:]_]*$co.*$ai|$gen \[?$ai|$nr|^[^[:alnum:]_]*$sess|^[^[:alnum:]_]*$credit[^[:alnum:]_]*(name[^[:alnum:]_]*)?((an?|the)[[:space:]]+)?$ai([^[:alnum:]_]|\$)"; then
+  echo "commit-msg: AI credit line found. You are the author: remove it and commit again." >&2
+  exit 1
+fi
+exit 0

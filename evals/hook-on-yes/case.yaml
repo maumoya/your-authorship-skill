@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: hook-on-yes
+expected_outcome: |
+  The agent shows the hook fix plan, applies `fix hook:<path to demo-app> --apply` because the user already said yes, then proves it: a test commit whose message carries an AI co-author trailer is refused, and a normal commit message is accepted.
+context:
+  scaffold_script: place-files.sh

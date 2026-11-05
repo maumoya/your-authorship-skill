@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: scan-then-ask
+expected_outcome: |
+  The agent runs the skill's authorship.py scan on ./demo-app (with --owner "Sam Rivera" and a --root that covers it), shows the findings table including the AI co-author trailer in history and the missing commit-msg hook, and asks before any fix. It applies nothing in this turn and never pastes the trailer line itself.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,56 @@
+{
+  "skill": "your-authorship-skill",
+  "queries": [
+    {
+      "text": "/your-authorship-skill",
+      "trigger": true
+    },
+    {
+      "text": "run an authorship sweep on my repos",
+      "trigger": true
+    },
+    {
+      "text": "make sure I'm the only author on my code, no AI credit anywhere",
+      "trigger": true
+    },
+    {
+      "text": "stop Claude from adding itself as co-author on my commits",
+      "trigger": true
+    },
+    {
+      "text": "remove Co-Authored-By Claude from my repos",
+      "trigger": true
+    },
+    {
+      "text": "turn off AI attribution in Claude Code, Codex and Cursor",
+      "trigger": true
+    },
+    {
+      "text": "check my github repos for AI credit lines",
+      "trigger": true,
+      "holdout": true
+    },
+    {
+      "text": "who owns my code if an agent wrote half of it? make the commits name only me",
+      "trigger": true,
+      "holdout": true
+    },
+    {
+      "text": "write a commit message for this diff",
+      "trigger": false
+    },
+    {
+      "text": "add an MIT license to this repo",
+      "trigger": false
+    },
+    {
+      "text": "fix the failing test in auth.py",
+      "trigger": false
+    },
+    {
+      "text": "show me git log for the last week",
+      "trigger": false,
+      "holdout": true
+    }
+  ]
+}

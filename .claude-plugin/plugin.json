@@ -1,0 +1,13 @@
+{
+  "name": "your-authorship-skill",
+  "version": "0.1.0",
+  "description": "Keeps you the sole author of your code when you build with AI agents: scans every local repo, your GitHub account and your AI tool settings for AI co-author trailers, generated-with footers and credit lines, fixes each one only on your OK, and installs a commit-msg hook so new ones are blocked.",
+  "author": {
+    "name": "Mauricio Alonso Moya Tapia",
+    "url": "https://github.com/maumoya"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/maumoya/your-authorship-skill",
+  "repository": "https://github.com/maumoya/your-authorship-skill",
+  "keywords": ["claude-code", "claude-skill", "agent-skills"]
+}

@@ -1,0 +1,13 @@
+# Your Authorship Skill
+
+> Keeps you the sole author of your code when you build with AI agents: scans every local repo, your GitHub account and your AI tool settings for AI co-author trailers, generated-with footers and credit lines, fixes each one only on your OK, and installs a commit-msg hook so new ones are blocked.
+
+## Install
+
+- Claude Code: `/plugin marketplace add maumoya/your-authorship-skill` then `/plugin install your-authorship-skill@your-authorship-skill`
+- Any agent: `npx skills add maumoya/your-authorship-skill`
+
+## Files
+
+- [SKILL.md](https://github.com/maumoya/your-authorship-skill/blob/main/skills/your-authorship-skill/SKILL.md): the skill
+- [README.md](https://github.com/maumoya/your-authorship-skill/blob/main/README.md): what it does and how to install it
