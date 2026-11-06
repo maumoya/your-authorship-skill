@@ -21,3 +21,42 @@ jobs:
 
       - name: Lint
         run: bash scripts/lint_skill.sh .
+
+  action:
+    name: Action self-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: The action passes this repo
+        uses: ./
+
+      - name: Make a repo whose last commit carries an AI co-author trailer
+        run: |
+          d="$RUNNER_TEMP/bad-repo"
+          git init -q -b main "$d"
+          echo hi > "$d/a.txt"
+          git -C "$d" add a.txt
+          git -C "$d" -c user.name=Sam -c user.email=sam@example.com commit -qm "init" \
+            -m "$(printf 'Co-%s Claude <bot@example.com>' 'authored-by:')"
+          echo "BAD_REPO=$d" >> "$GITHUB_ENV"
+
+      - name: The action fails that repo
+        id: bad
+        continue-on-error: true
+        uses: ./
+        with:
+          path: ${{ env.BAD_REPO }}
+          range: HEAD
+
+      - name: Assert the bad run failed
+        env:
+          OUTCOME: ${{ steps.bad.outcome }}
+          FOUND: ${{ steps.bad.outputs.findings }}
+        run: |
+          echo "outcome=$OUTCOME findings=$FOUND"
+          [ "$OUTCOME" = failure ] && [ "${FOUND:-0}" -ge 1 ]

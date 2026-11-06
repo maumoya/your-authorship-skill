@@ -157,9 +157,33 @@ def hooks_dir(repo: Path):
         return None, custom
     common = _git(repo, "rev-parse", "--git-common-dir").strip()
     if not common:
-        return None, ""
+        return _hooks_dir_from_files(repo)
     p = Path(common)
     return (p if p.is_absolute() else repo / p) / "hooks", ""
+
+
+def _hooks_dir_from_files(repo: Path):
+    """The hooks folder read from the repo's files, for when git itself cannot run (locked-down sandboxes,
+    missing developer tools). Follows a `.git` file (`gitdir: ...`, worktrees, --separate-git-dir)."""
+    dot = repo / ".git"
+    if dot.is_dir():
+        gd = dot
+    elif dot.is_file():
+        line = dot.read_text(errors="replace").strip()
+        if not line.startswith("gitdir:"):
+            return None, ""
+        gd = Path(line[len("gitdir:"):].strip())
+        gd = gd if gd.is_absolute() else (repo / gd).resolve()
+        cd = gd / "commondir"
+        if cd.is_file():
+            c = Path(cd.read_text().strip())
+            gd = c if c.is_absolute() else (gd / c).resolve()
+    else:
+        return None, ""
+    cfg = gd / "config"
+    if cfg.is_file() and re.search(r"^\s*hookspath\s*=", cfg.read_text(errors="replace"), re.I | re.M):
+        return None, "core.hooksPath (see .git/config)"
+    return (gd / "hooks") if gd.is_dir() else None, ""
 
 
 def check_hook(repo: Path) -> list:
@@ -466,6 +490,69 @@ def plan_fix(fix_id: str, owner: str):
     return None
 
 
+def ci_check(repo: Path, rev_range: str, files: bool, summary=None) -> int:
+    """Lines naming each commit (in REV_RANGE, default HEAD) and tracked file that carries AI credit.
+    Describes the kind of hit, never repeats the line. Exit 1 when anything is found, 2 on a git error."""
+    spec = [rev_range] if rev_range else ["-1", "HEAD"]
+    r = _run(["git", "-C", str(repo), "log", "--format=%h%x1f%an%x1f%ae%x1f%cn%x1f%ce%x1f%B%x1e", *spec])
+    if r.returncode != 0:
+        print(f"authorship: git log failed: {r.stderr.strip()[:300]}", file=sys.stderr)
+        return 2
+    rows, ncommits = [], 0
+    for rec in filter(str.strip, r.stdout.split("\x1e")):
+        parts = rec.strip("\n").split("\x1f", 5)
+        if len(parts) < 6:
+            continue
+        ncommits += 1
+        sha, an, ae, cn, ce, body = parts
+        for n, kind in findings(body):
+            rows.append(f"commit {sha}: {kind} (message line {n})")
+        if identity(an, ae) or identity(cn, ce):
+            rows.append(f"commit {sha}: authored or committed under an AI identity")
+    nfiles = 0
+    if files:
+        for f in check_files(repo):
+            nfiles += 1
+            rows.append(f"file {f['target'].split('/', 1)[-1]}: {f['problem']}")
+    for row in rows:
+        print(row)
+    verdict = (f"RESULT {len(rows)} AI credit finding(s) in {ncommits} commit(s)"
+               + (" and the tracked files" if files else ""))
+    print(verdict if rows else f"RESULT clean: {ncommits} commit(s)" + (" and the tracked files" if files else "")
+          + " name only their human authors")
+    if summary:
+        with open(summary, "a") as fh:
+            fh.write("### Authorship check\n\n")
+            fh.write("\n".join(f"- {x}" for x in rows) + "\n\n" if rows else "")
+            fh.write(("Not clean: remove the AI credit and push again." if rows else "Clean: your name only.") + "\n")
+    return 1 if rows else 0
+
+
+def test_hook(repo: Path) -> int:
+    """Run the installed commit-msg hook on two sample messages, the way git does before a commit."""
+    import tempfile
+    d, custom = hooks_dir(repo)
+    hook = d / "commit-msg" if d else None
+    if hook is None or not hook.is_file():
+        print(f"{repo}: no commit-msg hook found{' (' + custom + ')' if custom else ''}", file=sys.stderr)
+        return 2
+    samples = [("AI co-author trailer", "fix: typo\n\nCo-" + "authored-by: Claude <" + "noreply" + "@anthropic.com>\n", 1),
+               ("normal message", "fix: typo\n", 0)]
+    ok = True
+    print(f"hook: {hook}")
+    with tempfile.TemporaryDirectory() as t:
+        for label, body, want in samples:
+            m = Path(t) / "COMMIT_EDITMSG"
+            m.write_text(body)
+            r = _run(["sh", str(hook), str(m)])
+            got = "REFUSED" if r.returncode else "ALLOWED"
+            good = (r.returncode != 0) == bool(want)
+            ok &= good
+            print(f"{label:22} -> {got} (exit {r.returncode}) {'ok' if good else 'WRONG'}")
+    print("RESULT hook blocks AI credit" if ok else "RESULT hook does not work as expected")
+    return 0 if ok else 1
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="authorship.py", description=__doc__.splitlines()[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -481,7 +568,18 @@ def main(argv=None) -> int:
     f.add_argument("--owner", default="")
     sub.add_parser("message", help="check one commit message file").add_argument("file")
     sub.add_parser("text", help="check stdin")
+    c = sub.add_parser("check", help="CI check: fail when commits in a range or tracked files carry AI credit")
+    c.add_argument("repo", nargs="?", default=".")
+    c.add_argument("--range", default="", help="git revision range, e.g. origin/main..HEAD (default: HEAD only)")
+    c.add_argument("--no-files", action="store_true", help="skip the tracked-files check")
+    c.add_argument("--summary", help="also append a markdown report to this file (e.g. $GITHUB_STEP_SUMMARY)")
+    sub.add_parser("test-hook", help="prove a repo's installed hook refuses AI credit and lets a normal "
+                   "message through (runs the hook itself, so it works where git cannot)").add_argument("repo")
     a = p.parse_args(argv)
+    if a.cmd == "check":
+        return ci_check(Path(a.repo).expanduser(), a.range, not a.no_files, a.summary)
+    if a.cmd == "test-hook":
+        return test_hook(Path(a.repo).expanduser())
     if a.cmd in ("message", "text"):
         body = Path(a.file).read_text(errors="replace") if a.cmd == "message" else sys.stdin.read()
         hits = findings(body)

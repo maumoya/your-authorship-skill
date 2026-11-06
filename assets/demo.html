@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>your-authorship-skill demo</title>
+<style>
+  html,body{margin:0;background:#1B1240;height:100%}
+  .win{margin:28px auto;width:1180px;background:#120c2c;border-radius:16px;box-shadow:0 10px 40px #0008;overflow:hidden}
+  .bar{height:40px;background:#221849;display:flex;align-items:center;gap:10px;padding:0 18px}
+  .bar i{width:14px;height:14px;border-radius:50%;display:block}
+  .bar b{color:#C9B8FF;font:600 18px -apple-system,Helvetica,sans-serif;margin-left:16px}
+  pre{margin:0;padding:22px 28px;min-height:560px;color:#e9e4ff;font:24px/1.5 Menlo,monospace;white-space:pre-wrap}
+  .p{color:#C9B8FF}.h{color:#ff6b8a;font-weight:700}.ok{color:#4ade80;font-weight:700}.dim{color:#9a90c4}
+</style>
+<div class="win"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><b>your-authorship-skill · real run on a demo repo</b></div><pre id="t"></pre></div>
+<script>
+// Replays a real run on the eval fixture (evals/*/place-files.sh). The AI trailer is described, never written.
+const steps = [
+  ['p', '$ authorship.py scan --root ~/code\n'],
+  ['', 'Owner: Sam Rivera. 1 repo scanned. '], ['h', '1 high'], ['', ', 0 medium\n'],
+  ['h', ' high '], ['', ' demo-app: no commit-msg hook\n'],
+  ['dim', ' info  1 old commit carries an AI credit line (left as is)\n\n'],
+  ['p', '> install the hook in demo-app?  '], ['ok', 'yes\n'],
+  ['p', '$ authorship.py fix hook:~/code/demo-app --apply\n'],
+  ['ok', 'hook installed: demo-app/.git/hooks/commit-msg\n\n'],
+  ['p', '$ git commit -m "fix: typo" -m "<AI co-author trailer>"\n'],
+  ['h', 'commit-msg: AI credit line found. You are the author.\n'],
+  ['p', '$ git commit -m "fix: typo"\n'], ['ok', '✓ committed\n\n'],
+  ['p', '$ authorship.py scan --root ~/code\n'],
+  ['', 'Owner: Sam Rivera. '], ['ok', '0 high, 0 medium'], ['', '  ✓ your name only\n'],
+];
+const t = document.getElementById('t');
+let i = 0, j = 0, span = null;
+function tick() {
+  if (i >= steps.length) return;
+  const [cls, txt] = steps[i];
+  if (!span) { span = document.createElement('span'); if (cls) span.className = cls; t.appendChild(span); }
+  const n = cls === 'p' ? 2 : 8;
+  span.textContent += txt.slice(j, j + n); j += n;
+  if (j >= txt.length) { i++; j = 0; span = null; setTimeout(tick, cls === 'p' ? 260 : 90); }
+  else setTimeout(tick, 22);
+}
+setTimeout(tick, 300);
+</script>

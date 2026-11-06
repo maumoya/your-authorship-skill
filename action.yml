@@ -1,0 +1,50 @@
+name: Your Authorship Check
+description: Fail a pull request or push whose commits or files give an AI tool author credit. Keep your name only.
+author: Mauricio Alonso Moya Tapia
+branding:
+  icon: user-check
+  color: purple
+inputs:
+  path:
+    description: Directory of the git checkout to check (check out with fetch-depth 0 so the range exists).
+    default: .
+  range:
+    description: Git revision range to check, e.g. origin/main..HEAD. Empty picks it from the event (pull request base..head, push before..after, else HEAD only).
+    default: ""
+  files:
+    description: Also check the tracked files (README, LICENSE, CODEOWNERS and the rest) for AI credit lines.
+    default: "true"
+outputs:
+  findings:
+    description: Number of AI credit findings (0 means clean).
+    value: ${{ steps.check.outputs.findings }}
+runs:
+  using: composite
+  steps:
+    - name: Authorship check
+      id: check
+      shell: bash
+      env:
+        CHECK_PATH: ${{ inputs.path }}
+        CHECK_RANGE: ${{ inputs.range }}
+        CHECK_FILES: ${{ inputs.files }}
+        PR_BASE: ${{ github.event.pull_request.base.sha }}
+        PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        PUSH_BEFORE: ${{ github.event.before }}
+        PUSH_AFTER: ${{ github.event.after }}
+        SCRIPT: ${{ github.action_path }}/skills/your-authorship-skill/scripts/authorship.py
+      run: |
+        range="$CHECK_RANGE"
+        if [ -z "$range" ] && [ -n "$PR_BASE" ] && [ -n "$PR_HEAD" ]; then range="$PR_BASE..$PR_HEAD"
+        elif [ -z "$range" ] && [ -n "$PUSH_BEFORE" ] && [ -n "$PUSH_AFTER" ] && [ "${PUSH_BEFORE//0/}" != "" ]; then range="$PUSH_BEFORE..$PUSH_AFTER"
+        fi
+        args=(check "$CHECK_PATH")
+        [ -n "$range" ] && args+=(--range "$range")
+        [ "$CHECK_FILES" = true ] || args+=(--no-files)
+        set +e
+        out="$(python3 "$SCRIPT" "${args[@]}" --summary "$GITHUB_STEP_SUMMARY")"; rc=$?
+        set -e
+        echo "$out"
+        echo "findings=$(grep -cE '^(commit|file) ' <<<"$out" || true)" >> "$GITHUB_OUTPUT"
+        if [ "$rc" -eq 1 ]; then echo "::error::AI credit found: remove it and push again. You are the author."; exit 1; fi
+        exit "$rc"

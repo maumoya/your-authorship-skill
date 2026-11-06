@@ -25,17 +25,22 @@ read-only unless `fix ID --apply`).
 4. **Fix one at a time, on a yes.** For each fix ID, first run `python3 scripts/authorship.py fix ID` (shows the plan),
    ask the user, and only on a clear yes run `fix ID --apply`. Each apply keeps a `.bak-<timestamp>` backup and prints
    its path. Fix IDs: `claude-attribution`, `cursor-cli`, `claude-md`, `codex-agents`, `gemini-md`, `hook:<repo path>`.
+   After a hook install, prove it: `python3 scripts/authorship.py test-hook <repo>` runs the installed hook on a message
+   with an AI co-author trailer (must be REFUSED) and a normal one (must be ALLOWED), the same way git calls it. It works
+   even where `git` cannot run. Show its output; a real test commit is optional on top.
 5. **Files the script does not edit** (README credit lines, LICENSE holder, CODEOWNERS): show the file and line number,
    propose the edit, and make it with the user's OK, one file at a time.
 6. **History is info only.** Old commits with AI trailers are reported, never rewritten. Rewriting pushed history needs a
-   force-push; say so and leave the choice to the user, recommending to leave history alone.
+   force-push. Even when the user asks for it, do not do it: explain the cost (every commit hash changes, other clones
+   and open PRs break, signatures are lost), recommend leaving history alone, and offer the hook (`fix hook:<repo>`) so
+   new commits stay clean. The rewrite stays the user's own call, made by them.
 7. **Re-scan** and show the before/after count: high and medium must be 0, or each one left has a reason.
 
 ## Done when
 
 - The re-scan shows 0 high and 0 medium findings, or each remaining one is listed with the user's reason.
 - Every fix was applied only after the user's yes for that fix ID, and its backup path was shown.
-- Each repo the user chose has the commit-msg hook; a test commit carrying an AI co-author trailer is refused.
+- Each repo the user chose has the commit-msg hook, and `test-hook <repo>` printed `RESULT hook blocks AI credit`.
 
 ## Never
 

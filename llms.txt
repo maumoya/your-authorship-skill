@@ -1,13 +1,17 @@
 # Your Authorship Skill
 
-> Keeps you the sole author of your code when you build with AI agents: scans every local repo, your GitHub account and your AI tool settings for AI co-author trailers, generated-with footers and credit lines, fixes each one only on your OK, and installs a commit-msg hook so new ones are blocked.
+> You built it. Your name on it. Keeps you the sole author of your code when you build with AI agents: scans your local repos, your GitHub repos and your Claude Code, Cursor CLI, Codex and Gemini CLI settings for AI co-author trailers, generated-with footers and credit lines, fixes each one only on your OK, and installs a commit-msg hook so new ones are refused. Local only; history is never rewritten.
 
 ## Install
 
 - Claude Code: `/plugin marketplace add maumoya/your-authorship-skill` then `/plugin install your-authorship-skill@your-authorship-skill`
-- Any agent: `npx skills add maumoya/your-authorship-skill`
+- Any agent: `npx skills add maumoya/your-authorship-skill@v0.1.0`
+- GitHub Action: `uses: maumoya/your-authorship-skill@v0.1.0` fails a pull request whose new commits or files give an AI tool author credit
 
 ## Files
 
 - [SKILL.md](https://github.com/maumoya/your-authorship-skill/blob/main/skills/your-authorship-skill/SKILL.md): the skill
+- [authorship.py](https://github.com/maumoya/your-authorship-skill/blob/main/skills/your-authorship-skill/scripts/authorship.py): scanner and fixer
+- [commit-msg](https://github.com/maumoya/your-authorship-skill/blob/main/skills/your-authorship-skill/scripts/commit-msg): the hook
+- [action.yml](https://github.com/maumoya/your-authorship-skill/blob/main/action.yml): the GitHub Action (Marketplace)
 - [README.md](https://github.com/maumoya/your-authorship-skill/blob/main/README.md): what it does and how to install it

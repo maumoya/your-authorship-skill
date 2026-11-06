@@ -4,4 +4,4 @@ focus: trace
 weight: 1
 ---
 
-The agent tried a commit with an AI co-author trailer after installing the hook and showed that git refused it.
+After installing the hook, the agent showed that a message carrying an AI co-author trailer is refused: either a real `git commit` was refused, or `authorship.py test-hook` (which runs the installed hook the way git does) printed REFUSED for the trailer message.

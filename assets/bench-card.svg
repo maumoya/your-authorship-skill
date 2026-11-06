@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="240" viewBox="0 0 760 240" role="img" aria-label="100% of eval runs passed with the skill, 0% without it: grader score 100% with the skill versus 31% without, 3% less spend per run, 16% more time per run, measured 2026-11-05 over 3 cases and 3 runs each">
+  <rect x="1.5" y="1.5" width="757" height="237" rx="18" fill="#0d1117" stroke="#2da44e" stroke-width="2"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="180" y="132" text-anchor="middle" font-size="120" font-weight="800" fill="#2da44e">100%</text>
+    <text x="180" y="170" text-anchor="middle" font-size="20" font-weight="600" fill="#2da44e">of eval runs passed</text>
+    <text x="180" y="196" text-anchor="middle" font-size="14" fill="#8b949e">0% without the skill · 3 cases × 3 runs</text>
+
+    <text x="370" y="62" font-size="15" fill="#c9d1d9">Grader score without the skill</text>
+    <text x="730" y="62" text-anchor="end" font-size="15" font-weight="700" fill="#f85149">31%</text>
+    <rect x="370" y="72" width="360" height="22" rx="6" fill="#21262d"/>
+    <rect x="370" y="72" width="112" height="22" rx="6" fill="#f85149"/>
+
+    <text x="370" y="132" font-size="15" fill="#c9d1d9">Grader score with the skill</text>
+    <text x="730" y="132" text-anchor="end" font-size="15" font-weight="700" fill="#2da44e">100%</text>
+    <rect x="370" y="142" width="360" height="22" rx="6" fill="#21262d"/>
+    <rect x="370" y="142" width="360" height="22" rx="6" fill="#2da44e"/>
+
+    <text x="370" y="200" font-size="14" fill="#8b949e">3% less spend per run, 16% more time per run</text>
+    <text x="370" y="220" font-size="14" fill="#8b949e">measured 2026-11-05 · method in Results</text>
+  </g>
+</svg>
