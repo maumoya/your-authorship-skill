@@ -8,8 +8,8 @@
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
   <a href="https://opensource.org/license/mit"><img src="https://img.shields.io/badge/Open%20Source-OSI%20approved%20license-3DA639?logo=opensourceinitiative&logoColor=white" alt="Open Source: OSI-approved MIT license"></a>
   <img src="https://img.shields.io/badge/privacy-no%20tracking%20%C2%B7%20no%20data%20collected-7c5cfc" alt="Privacy: no tracking, no data collected">
-  <!-- OpenSSF Scorecard: no result yet; add the scorecard workflow and re-run -->
-  <!-- OpenSSF Best Practices: not registered; run bestpractices.sh maumoya/your-authorship-skill -->
+  <a href="https://scorecard.dev/viewer/?uri=github.com/maumoya/your-authorship-skill"><img src="https://api.scorecard.dev/projects/github.com/maumoya/your-authorship-skill/badge" alt="OpenSSF Scorecard"></a>
+  <a href="https://www.bestpractices.dev/projects/16372"><img src="https://www.bestpractices.dev/projects/16372/badge" alt="OpenSSF Best Practices: passing"></a>
 </p>
 
 <p align="center">
