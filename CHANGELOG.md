@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- One author, checked three ways. The scan now asks GitHub, per repo, for every contributor besides you (high), each
+  open PR by a bot or another account (medium: never merge it as that account) and whether merged PR branches stay
+  on GitHub (low, new fix `delete-branches:<owner/repo>`). The history rows also count bot authors on every branch
+  and tag. SKILL.md step 7 adds the third check: read the repo page's Contributors, which can lag about 24 h.
+
 ## 0.1.0
 
 - `authorship.py scan`: read-only sweep of local git repos, GitHub repos (license, owner) and the settings of Claude

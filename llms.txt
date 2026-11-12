@@ -5,8 +5,8 @@
 ## Install
 
 - Claude Code: `/plugin marketplace add maumoya/your-authorship-skill` then `/plugin install your-authorship-skill@your-authorship-skill`
-- Any agent: `npx skills add maumoya/your-authorship-skill@v0.1.0`
-- GitHub Action: `uses: maumoya/your-authorship-skill@v0.1.0` fails a pull request whose new commits or files give an AI tool author credit
+- Any agent: `npx skills add maumoya/your-authorship-skill@v0.2.0`
+- GitHub Action: `uses: maumoya/your-authorship-skill@v0.2.0` fails a pull request whose new commits or files give an AI tool author credit
 
 ## Files
 

@@ -82,6 +82,13 @@ def identity(name: str, email: str) -> bool:
     return bool(AI_IDENTITY.search(name.strip()) or AI_IDENTITY.search(email.strip()))
 
 
+BOT = re.compile(r"\[bot\]", re.I)
+
+
+def is_bot(name: str, email: str) -> bool:
+    return bool(BOT.search(name) or BOT.search(email))
+
+
 # ---------- helpers ----------
 
 def home() -> Path:
@@ -222,13 +229,14 @@ def check_files(repo: Path) -> list:
 
 def check_history(repo: Path) -> list:
     log = _git(repo, "log", "--all", "--format=%an%x1f%ae%x1f%cn%x1f%ce%x1f%B%x1e")
-    bad_msg = bad_id = 0
+    bad_msg = bad_id = bots = 0
     for rec in filter(str.strip, log.split("\x1e")):
         parts = rec.strip("\n").split("\x1f", 4)
         if len(parts) < 5:
             continue
         an, ae, cn, ce, body = parts
         bad_id += identity(an, ae) or identity(cn, ce)
+        bots += is_bot(an, ae)
         bad_msg += bool(findings(body))
     out = []
     if bad_msg:
@@ -237,6 +245,10 @@ def check_history(repo: Path) -> list:
     if bad_id:
         out.append(_finding("history", repo.name, f"{bad_id} past commit(s) authored under an AI identity",
                             fix="leave as is; check your git user.name and user.email", level="info"))
+    if bots:
+        out.append(_finding("history", repo.name, f"{bots} commit(s) on some branch or tag authored by a bot",
+                            fix="a bot author can show as a second GitHub contributor; see the github rows",
+                            level="info"))
     return out
 
 
@@ -300,6 +312,35 @@ def check_github(clones: list) -> list:
         if not item.get("licenseInfo"):
             out.append(_finding("github", f"{user}/{name}", "GitHub shows no licence", fix="add one in a PR",
                                 level="low"))
+        out += check_one_author(user, name)
+    return out
+
+
+def check_one_author(user: str, name: str) -> list:
+    """One author on GitHub: the contributor list names only you, no open PR by a bot or another account waits
+    to be merged as that account, and merged PR branches are deleted (a kept branch keeps a bot commit alive).
+    The repo page's Contributors sidebar is cached apart from the API and can lag about 24 h after a fix."""
+    slug, out = f"{user}/{name}", []
+    r = _run(["gh", "api", f"repos/{slug}/contributors?anon=1", "--jq", ".[] | (.login // .name // \"anonymous\")"])
+    if r.returncode == 0:
+        others = sorted({w for w in r.stdout.split("\n") if w.strip() and w.strip().lower() != user.lower()})
+        if others:
+            out.append(_finding("github", slug, f"GitHub lists {len(others)} contributor(s) besides you: "
+                                + ", ".join(others),
+                                fix="land bot PRs as your own commits; re-authoring history is your own call, backed "
+                                "up first; if the API is clean but the repo page still shows more after 24 h, ask "
+                                "GitHub Support to recompute it", level="high"))
+    r = _run(["gh", "pr", "list", "-R", slug, "--state", "open", "--json", "number,author",
+              "--jq", f'.[] | select((.author.login | ascii_downcase) != "{user.lower()}") '
+              '| "#\\(.number) by \\(.author.login)"'])
+    for line in filter(str.strip, r.stdout.split("\n")) if r.returncode == 0 else []:
+        out.append(_finding("github", slug, f"open PR {line}: merging it as that account adds a contributor",
+                            fix="apply its change as your own commit in a new PR, then close it "
+                            "(skill-forger-e2e: land_bot_pr.sh)", level="medium"))
+    r = _run(["gh", "api", f"repos/{slug}", "--jq", ".delete_branch_on_merge"])
+    if r.returncode == 0 and r.stdout.strip() == "false":
+        out.append(_finding("github", slug, "merged PR branches stay on GitHub and keep old commits reachable",
+                            fix_id=f"delete-branches:{slug}", fix="turn on delete_branch_on_merge", level="low"))
     return out
 
 
@@ -481,6 +522,17 @@ def plan_fix(fix_id: str, owner: str):
         path = rule_files[fix_id]
         return (f"{path}: append the authorship rule naming {owner} (backup kept)",
                 lambda: _append_rule(path, owner))
+    if fix_id.startswith("delete-branches:"):
+        slug = fix_id.split(":", 1)[1]
+        if not re.fullmatch(r"[\w.-]+/[\w.-]+", slug):
+            return None
+
+        def turn_on():
+            r = _run(["gh", "api", "-X", "PATCH", f"repos/{slug}", "-F", "delete_branch_on_merge=true"])
+            if r.returncode != 0:
+                raise SystemExit(f"could not change {slug}: {r.stderr.strip()}")
+        return (f"github.com/{slug}: delete head branches after each merge (one repo setting, undo in Settings)",
+                turn_on)
     if fix_id.startswith("hook:"):
         repo = Path(fix_id.split(":", 1)[1]).expanduser()
         if not (repo / ".git").exists():
