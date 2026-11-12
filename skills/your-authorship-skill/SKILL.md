@@ -24,7 +24,8 @@ read-only unless `fix ID --apply`).
    offending line itself back into chat or a file; describe it ("AI co-author trailer in 3 commits").
 4. **Fix one at a time, on a yes.** For each fix ID, first run `python3 scripts/authorship.py fix ID` (shows the plan),
    ask the user, and only on a clear yes run `fix ID --apply`. Each apply keeps a `.bak-<timestamp>` backup and prints
-   its path. Fix IDs: `claude-attribution`, `cursor-cli`, `claude-md`, `codex-agents`, `gemini-md`, `hook:<repo path>`.
+   its path. Fix IDs: `claude-attribution`, `cursor-cli`, `claude-md`, `codex-agents`, `gemini-md`, `hook:<repo path>`,
+   `delete-branches:<owner/repo>` (a GitHub repo setting, so no file backup; it is undone in the repo's Settings).
    After a hook install, prove it: `python3 scripts/authorship.py test-hook <repo>` runs the installed hook on a message
    with an AI co-author trailer (must be REFUSED) and a normal one (must be ALLOWED), the same way git calls it. It works
    even where `git` cannot run. Show its output; a real test commit is optional on top.
@@ -34,12 +35,21 @@ read-only unless `fix ID --apply`).
    force-push. Even when the user asks for it, do not do it: explain the cost (every commit hash changes, other clones
    and open PRs break, signatures are lost), recommend leaving history alone, and offer the hook (`fix hook:<repo>`) so
    new commits stay clean. The rewrite stays the user's own call, made by them.
-7. **Re-scan** and show the before/after count: high and medium must be 0, or each one left has a reason.
+7. **One author, checked three ways.** You (the repo owner's account) are the only author: no bot, no AI assistant.
+   1. git: the history rows count AI and bot authors and AI trailers on every local branch and tag.
+   2. GitHub API: per repo, the scan lists every contributor besides you (high), each open PR by a bot or another
+      account (medium: merging it as that account adds a contributor; apply its change as your own commit and close
+      it), and merged PR branches left on GitHub (low, `delete-branches:` fix: a kept branch keeps a bot commit alive).
+   3. Rendered page: open each flagged repo's page and read "Contributors". It is cached apart from the API and can
+      lag about 24 h after a fix; still wrong after 24 h with 1 and 2 clean means a GitHub Support ticket, not a pass.
+8. **Re-scan** and show the before/after count: high and medium must be 0, or each one left has a reason.
 
 ## Done when
 
 - The re-scan shows 0 high and 0 medium findings, or each remaining one is listed with the user's reason.
 - Every fix was applied only after the user's yes for that fix ID, and its backup path was shown.
+- No GitHub repo lists a contributor besides the owner, or each one left has the user's reason (the repo page
+  read back, with the ~24 h lag noted).
 - Each repo the user chose has the commit-msg hook, and `test-hook <repo>` printed `RESULT hook blocks AI credit`.
 
 ## Never
@@ -47,6 +57,8 @@ read-only unless `fix ID --apply`).
 - Never write an AI co-author trailer, "generated with" footer or AI credit line, in any file, commit or reply.
 - Never edit, commit, push or change settings without a yes for that exact item.
 - Never rewrite or force-push git history.
-- Never send scan results anywhere; the only network calls are two read-only `gh` reads (your login and
-  your repo list with license info).
+- Never merge a bot's PR as the bot: that adds it as a contributor.
+- Never send scan results anywhere; the only network calls are read-only `gh` reads (your login, your repo list
+  with license info, and per repo its contributors, open PRs and branch setting), plus the one setting change a
+  `delete-branches:` fix makes on a yes.
 - Never claim done without the re-scan output.

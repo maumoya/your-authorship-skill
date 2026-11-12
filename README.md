@@ -42,7 +42,7 @@ Any agent that reads skills:
 npx skills add maumoya/your-authorship-skill
 ```
 
-Pin a release: `npx skills add maumoya/your-authorship-skill@v0.1.0`.
+Pin a release: `npx skills add maumoya/your-authorship-skill@v0.2.0`.
 
 ## Use
 
@@ -59,7 +59,10 @@ The skill then:
 3. **Installs the hook** in the repos you pick. A commit that carries an AI co-author trailer or "generated with"
    footer is refused; a normal commit goes through. `test-hook` proves both on the spot.
 4. **Leaves history alone.** Old commits with AI credit are listed as info. It never rewrites or force-pushes.
-5. **Re-scans** and shows the before and after counts.
+5. **One author, checked three ways.** git history (AI and bot authors on every branch and tag), the GitHub API
+   (any contributor besides you, open bot PRs that must never be merged as the bot, merged branches left on
+   GitHub), and the repo page's Contributors read back (it can lag about 24 h).
+6. **Re-scans** and shows the before and after counts.
 
 Run the scanner on its own:
 
@@ -75,6 +78,7 @@ python3 skills/your-authorship-skill/scripts/authorship.py test-hook ~/code/my-a
 | `cursor-cli` | Cursor CLI config: agent commit attribution off |
 | `claude-md`, `codex-agents`, `gemini-md` | That tool's global rules file gets an authorship rule |
 | `hook:<repo path>` | Installs the `commit-msg` hook in that repo |
+| `delete-branches:<owner/repo>` | GitHub deletes a PR's branch after merge, so no old bot commit stays reachable |
 
 README, LICENSE and CODEOWNERS edits are suggested, never made without your OK.
 
@@ -93,7 +97,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: maumoya/your-authorship-skill@v0.1.0
+      - uses: maumoya/your-authorship-skill@v0.2.0
 ```
 
 It checks only the commits the pull request (or push) adds, so old history never blocks you, plus the tracked files.
@@ -134,8 +138,8 @@ agent is a tool, like your editor: it should not sign your work.
 
 ### Does it send my data anywhere?
 
-No. It runs locally. The only network calls are two read-only `gh` reads: your login and your repo list with license
-info. Skip both with `--no-github`.
+No. It runs locally. The only network calls are read-only `gh` reads: your login, your repo list with license
+info, and per repo its contributors, open PRs and branch setting. The one write is the `delete-branches:` fix, on your yes. Skip both with `--no-github`.
 
 ### Will it rewrite my git history?
 
